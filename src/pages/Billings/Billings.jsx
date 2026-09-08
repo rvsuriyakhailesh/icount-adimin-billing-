@@ -4,7 +4,11 @@ import "./Billings.css";
 import { isValidDateValue, isValidFourDigitYear } from "../../utils/dateValidation";
 import { getDisplayComplexCode } from "../../utils/idValidation";
 import { sanitizeAmount } from "../../utils/numberInput";
-import { billingApiRequest, ensureAllocationBackendMigration } from "../../utils/billingApi";
+import {
+  billingApiRequest,
+  ensureAllocationBackendMigration,
+  getStage3BillingSummary,
+} from "../../utils/billingApi";
 import {
   getBillingAsOfDate,
   getLatestNormalBillingMonthStart,
@@ -13,6 +17,26 @@ import {
 
 const GUIDED_SCROLL_DURATION_MS = 800;
 const GUIDED_SCROLL_TOP_OFFSET_PX = 24;
+
+function formatPriceChangeDateDisplay(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}-${match[2]}-${match[1]}` : "";
+}
+
+function maskPriceChangeDateInput(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}-${digits.slice(2, 4)}-${digits.slice(4)}`;
+}
+
+function getCanonicalPriceChangeDate(displayValue) {
+  const match = String(displayValue || "").match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!match) return "";
+
+  const canonical = `${match[3]}-${match[2]}-${match[1]}`;
+  return isValidDateValue(canonical) ? canonical : "";
+}
 
 
 function compareColumnValues(leftValue, rightValue) {
@@ -141,8 +165,69 @@ const billingAuditFieldLabels = {
 
 const rowsPerPageOptions = [10, 25, 50, 100];
 
+function normalizeStage3BillingSummary(summary) {
+  if (!summary || typeof summary !== "object") {
+    return null;
+  }
+
+  if (
+    summary.data &&
+    typeof summary.data === "object" &&
+    !Array.isArray(summary.data) &&
+    !("billingRecords" in summary)
+  ) {
+    return summary.data;
+  }
+
+  return summary;
+}
+
+function formatSummaryCount(summarySection) {
+  const count = Number(summarySection?.count);
+  return Number.isFinite(count) ? count : "Unavailable";
+}
+
 function normalizeValue(value) {
   return String(value || "").trim();
+}
+
+function resolveBillingRecordSite(billingRecord, candidates = []) {
+  if (!billingRecord) return null;
+
+  const backendSiteId = normalizeValue(
+    billingRecord.backendSiteId || billingRecord.siteBackendId,
+  );
+  const screenCode = normalizeValue(
+    billingRecord.screenCode || billingRecord.siteId || billingRecord.siteScope,
+  ).toUpperCase();
+
+  return (
+    candidates.find(
+      (candidate) => {
+        const candidateBackendId = normalizeValue(
+          candidate?.backendSiteId ||
+            candidate?.id ||
+            candidate?.stage3Data?.backendSiteId ||
+            candidate?.stage2Data?.backendSiteId ||
+            candidate?.stage1Data?.backendSiteId,
+        );
+        return backendSiteId && candidateBackendId === backendSiteId;
+      },
+    ) ||
+    candidates.find(
+      (candidate) => {
+        const candidateScreenCode = normalizeValue(
+          candidate?.screenCode ||
+            candidate?.siteId ||
+            candidate?.stage3Data?.screenCode ||
+            candidate?.stage2Data?.screenCode ||
+            candidate?.stage1Data?.screenCode,
+        ).toUpperCase();
+        return screenCode && candidateScreenCode === screenCode;
+      },
+    ) ||
+    null
+  );
 }
 
 function getOwnedInstallationExpenses(record) {
@@ -4512,6 +4597,7 @@ function Billings({
   stage2Records = [],
   setStage2Records = () => {},
   stage3Records = [],
+  canonicalSiteRecords = [],
   setStage3Records = () => {},
   billingRecords = [],
   setBillingRecords = () => {},
@@ -4521,6 +4607,10 @@ function Billings({
   onReturnCommercialCorrectionToStage1 = () => false,
 }) {
   const commonScopeMembershipRecords = [...stage1Records, ...stage2Records];
+  const billingRecordSiteCandidates = useMemo(
+    () => [...stage3Records, ...canonicalSiteRecords],
+    [canonicalSiteRecords, stage3Records],
+  );
   const [activeWorkspace, setActiveWorkspace] = useState(workspaceModes.BILLING);
   const [activeBillingSection, setActiveBillingSection] = useState(
     billingSections.FIRST_TIME,
@@ -4545,6 +4635,8 @@ function Billings({
     newFee: "",
     newMode: "",
   });
+  const [priceChangeEffectiveDateDisplay, setPriceChangeEffectiveDateDisplay] =
+    useState("");
   const [priceChangeMessage, setPriceChangeMessage] = useState("");
   const [allocationValidationPopup, setAllocationValidationPopup] = useState(null);
   const [isApplyingPriceChange, setIsApplyingPriceChange] = useState(false);
@@ -4668,6 +4760,9 @@ function Billings({
     remarks: "",
   });
   const [focSaveMessage, setFocSaveMessage] = useState("");
+  const [canonicalBillingSummary, setCanonicalBillingSummary] = useState(null);
+  const [billingSummaryError, setBillingSummaryError] = useState("");
+  const [billingSummaryLoading, setBillingSummaryLoading] = useState(true);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const normalizedPriceChangeSearch = priceChangeSearchTerm.trim().toLowerCase();
@@ -4677,6 +4772,89 @@ function Billings({
     .toLowerCase();
   const normalizedClosureSearch = closureSearchTerm.trim().toLowerCase();
   const normalizedOtfSearch = otfSearchTerm.trim().toLowerCase();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBillingSummary() {
+      setBillingSummaryLoading(true);
+      try {
+        const summary = await getStage3BillingSummary();
+        if (cancelled) return;
+        setCanonicalBillingSummary(normalizeStage3BillingSummary(summary));
+        setBillingSummaryError("");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Unable to load canonical Stage 3 Billing summary", error);
+        setBillingSummaryError(`Billing summary unavailable. ${error.message}`);
+      } finally {
+        if (!cancelled) setBillingSummaryLoading(false);
+      }
+    }
+
+    const handleSummaryUpdated = () => loadBillingSummary();
+    loadBillingSummary();
+    window.addEventListener("billing-summary-updated", handleSummaryUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("billing-summary-updated", handleSummaryUpdated);
+    };
+  }, []);
+
+  const canonicalBillingRecordRows = useMemo(() => {
+    const records = canonicalBillingSummary?.billingRecords?.records;
+    if (!Array.isArray(records)) return null;
+
+    return records.map((summaryRecord) => {
+      const backendSiteId = normalizeValue(summaryRecord?.backendSiteId);
+      const screenCode = normalizeValue(summaryRecord?.screenCode).toUpperCase();
+      const stage3Record = resolveBillingRecordSite(
+        summaryRecord,
+        billingRecordSiteCandidates,
+      );
+      const persisted = stage3Record?.firstTimeBillingRecord;
+      const localRecord = billingRecords.find(
+        (record) =>
+          normalizeValue(record?.billingRecordId) ===
+          normalizeValue(summaryRecord?.firstTimeBillingRecordId),
+      );
+
+      return {
+        ...(stage3Record || {}),
+        ...(persisted && typeof persisted === "object" ? persisted : {}),
+        ...(localRecord || {}),
+        ...summaryRecord,
+        backendSiteId:
+          backendSiteId ||
+          normalizeValue(stage3Record?.backendSiteId) ||
+          normalizeValue(persisted?.backendSiteId) ||
+          normalizeValue(localRecord?.backendSiteId),
+        billingCode:
+          normalizeValue(summaryRecord?.billingCode) ||
+          normalizeValue(stage3Record?.billingCode) ||
+          normalizeValue(localRecord?.billingCode),
+        complexCode:
+          normalizeValue(summaryRecord?.complexCode) ||
+          normalizeValue(stage3Record?.complexCode) ||
+          normalizeValue(localRecord?.complexCode),
+        screenCode: summaryRecord.screenCode || stage3Record?.screenCode || screenCode,
+        screenName:
+          normalizeValue(summaryRecord?.screenName) ||
+          normalizeValue(stage3Record?.screenName) ||
+          normalizeValue(localRecord?.screenName),
+        location:
+          normalizeValue(summaryRecord?.location) ||
+          normalizeValue(stage3Record?.location) ||
+          normalizeValue(localRecord?.location),
+        submissionStatus:
+          normalizeValue(localRecord?.submissionStatus) ||
+          normalizeValue(summaryRecord?.billingVerificationStatus),
+        billingRecordId:
+          normalizeValue(localRecord?.billingRecordId) ||
+          normalizeValue(summaryRecord?.firstTimeBillingRecordId),
+      };
+    });
+  }, [billingRecordSiteCandidates, billingRecords, canonicalBillingSummary]);
 
   useEffect(() => {
     let cancelled = false;
@@ -5032,6 +5210,10 @@ function Billings({
 
 
   const recurringRows = useMemo(() => {
+    if (Array.isArray(canonicalBillingSummary?.recurringBilling?.records)) {
+      return canonicalBillingSummary.recurringBilling.records;
+    }
+
     const nextRows = [];
     const combinedGroups = new Map();
 
@@ -5142,6 +5324,7 @@ function Billings({
 
     return nextRows;
   }, [
+    canonicalBillingSummary,
     siteRecurringRows,
     stage3Records,
     commonComplexAllocations,
@@ -5352,24 +5535,7 @@ function Billings({
   }
 
   function getStage3RecordForPriceChangeBillingRecord(billingRecord) {
-    if (!billingRecord) return null;
-
-    const sourceRecordId = normalizeValue(billingRecord.sourceRecordId);
-    const screenCode = normalizeValue(
-      billingRecord.screenCode || billingRecord.siteScope,
-    );
-
-    return (
-      stage3Records.find(
-        (record) =>
-          sourceRecordId && normalizeValue(record.recordId) === sourceRecordId,
-      ) ||
-      stage3Records.find(
-        (record) =>
-          screenCode && normalizeValue(record.screenCode) === screenCode,
-      ) ||
-      null
-    );
+    return resolveBillingRecordSite(billingRecord, billingRecordSiteCandidates);
   }
 
   function handlePriceChangeTypeSelection(nextChangeType) {
@@ -5430,6 +5596,42 @@ function Billings({
         "New Subscription Fee cannot be the same as Current Subscription Fee.";
       window.alert(message);
       setPriceChangeMessage(message);
+    }
+  }
+
+  function handlePriceChangeEffectiveDateInput(event) {
+    const nextDisplay = maskPriceChangeDateInput(event.target.value);
+    const canonicalValue = getCanonicalPriceChangeDate(nextDisplay);
+    const minimumValue = getMinimumPriceChangeEffectiveDate(activeRecord);
+
+    setPriceChangeEffectiveDateDisplay(nextDisplay);
+    setPriceChangeDraft((current) => ({
+      ...current,
+      effectiveDate: canonicalValue,
+    }));
+
+    if (!canonicalValue) {
+      setPriceChangeMessage("");
+      return;
+    }
+
+    if (minimumValue && canonicalValue < minimumValue) {
+      setPriceChangeMessage(
+        `Price Change Effective Date must be on or after ${formatBillingDateDisplay(minimumValue)} for this billing mode.`,
+      );
+      return;
+    }
+
+    setPriceChangeMessage("");
+  }
+
+  function handlePriceChangeEffectiveDateBlur() {
+    if (!priceChangeEffectiveDateDisplay) return;
+
+    if (!getCanonicalPriceChangeDate(priceChangeEffectiveDateDisplay)) {
+      setPriceChangeMessage(
+        "Please enter a valid Effective Date using a 4-digit year.",
+      );
     }
   }
 
@@ -5980,7 +6182,66 @@ function Billings({
     setActiveRecordId("");
   }
 
-  function openPriceChangeDraftForRecord(record, sourceBillingRecordId = "") {
+  async function persistOpenPriceChangeWorkItem(
+    record,
+    sourceBillingRecordId,
+    requestId,
+    initiatedAt,
+    currentFee,
+  ) {
+    const isCommon = isCommonComplexBillingRecord(record);
+    const groupKey = isCommon ? getCommonComplexBillingGroupKey(record) : "";
+    const affectedRecords = stage3Records.filter((candidate) =>
+      isCommon
+        ? getCommonComplexBillingGroupKey(candidate) === groupKey &&
+          !isFoCOriginRecord(candidate)
+        : candidate.recordId === record.recordId,
+    );
+
+    if (affectedRecords.some((candidate) => !normalizeValue(candidate.backendSiteId))) {
+      throw new Error("A canonical backend Site ID is required to open Price Change & Reallocation.");
+    }
+
+    await Promise.all(
+      affectedRecords.map((candidate) => {
+        const currentStage3 =
+          candidate?.stage3Data && typeof candidate.stage3Data === "object"
+            ? candidate.stage3Data
+            : candidate;
+        const request = {
+          requestId,
+          status: "Pending Validation",
+          approvalStatus: "Not Required",
+          makerCheckerReady: true,
+          sourceBillingRecordId,
+          initiatedAt,
+          effectiveDate: "",
+          remarks: "",
+          previousFee: normalizeValue(currentFee),
+          newFee: normalizeValue(currentFee),
+          changeType: "Price Change",
+          previousMode: normalizeValue(candidate?.subscriptionMode),
+          newMode: normalizeValue(candidate?.subscriptionMode),
+          scope: isCommon ? "Common Complex" : "Site",
+        };
+
+        return billingApiRequest(
+          `/sites/${encodeURIComponent(candidate.backendSiteId)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              stage3Data: {
+                ...currentStage3,
+                priceChangeRequest: request,
+              },
+            }),
+          },
+        );
+      }),
+    );
+  }
+
+  async function openPriceChangeDraftForRecord(record, sourceBillingRecordId = "") {
     if (!record) return;
     setAllocationModelValidation(null);
     setAllocationValidationPopup(null);
@@ -5994,6 +6255,7 @@ function Billings({
     }
 
     const existingRequest = getPriceChangeRequest(record);
+    const openRequest = isPriceChangeRequestOpen(record) ? existingRequest : null;
     const currentFee = isCommonComplexBillingRecord(record)
       ? resolveCommonComplexSubscriptionFee(
           record,
@@ -6004,9 +6266,9 @@ function Billings({
         normalizeValue(record.subscriptionFee);
 
     const initialChangeType =
-      normalizeValue(existingRequest?.changeType) || "Price Change";
+      normalizeValue(openRequest?.changeType) || "Price Change";
     const currentMode = normalizeSubscriptionModeLabel(record?.subscriptionMode);
-    const requestedMode = normalizeValue(existingRequest?.newMode);
+    const requestedMode = normalizeValue(openRequest?.newMode);
     const initialNewMode =
       initialChangeType === "Price Change"
         ? currentMode
@@ -6016,11 +6278,14 @@ function Billings({
 
     setPriceChangeDraft({
       changeType: initialChangeType,
-      effectiveDate: normalizeValue(existingRequest?.effectiveDate),
+      effectiveDate: normalizeValue(openRequest?.effectiveDate),
       remarks: "",
-      newFee: normalizeValue(existingRequest?.newFee) || normalizeValue(currentFee),
+      newFee: normalizeValue(openRequest?.newFee) || normalizeValue(currentFee),
       newMode: initialNewMode,
     });
+    setPriceChangeEffectiveDateDisplay(
+      formatPriceChangeDateDisplay(openRequest?.effectiveDate),
+    );
 
     setAllocationModelChangeDraft({
       modelId: "",
@@ -6045,22 +6310,41 @@ function Billings({
       setReallocationOriginalAllocations({});
     }
 
-    if (sourceBillingRecordId && !existingRequest) {
+    if (sourceBillingRecordId && !openRequest) {
       const initiatedAt = new Date().toISOString();
       const isCommon = isCommonComplexBillingRecord(record);
       const groupKey = isCommon ? getCommonComplexBillingGroupKey(record) : "";
+      const requestId = `price-change-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+      try {
+        await persistOpenPriceChangeWorkItem(
+          record,
+          sourceBillingRecordId,
+          requestId,
+          initiatedAt,
+          currentFee,
+        );
+      } catch (error) {
+        setPriceChangeMessage(
+          `Price Change work item could not be opened. ${error.message}`,
+        );
+        setActiveRecordId("");
+        setActiveBillingSection("");
+        return;
+      }
 
       setStage3Records((currentRecords) =>
         currentRecords.map((candidate) => {
           const affected = isCommon
-            ? getCommonComplexBillingGroupKey(candidate) === groupKey
+            ? getCommonComplexBillingGroupKey(candidate) === groupKey &&
+              !isFoCOriginRecord(candidate)
             : candidate.recordId === record.recordId;
           if (!affected) return candidate;
 
           return {
             ...candidate,
             priceChangeRequest: {
-              requestId: `price-change-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              requestId,
               status: "Pending Validation",
               approvalStatus: "Not Required",
               makerCheckerReady: true,
@@ -6622,6 +6906,7 @@ function Billings({
     priceChangeTransactionIdRef.current = "";
     if (!activeRecord) {
       setPriceChangeDraft({ changeType: "Price Change", effectiveDate: "", remarks: "", newFee: "", newMode: "" });
+      setPriceChangeEffectiveDateDisplay("");
       setPriceChangeMessage("");
       return;
     }
@@ -6670,6 +6955,7 @@ function Billings({
     );
 
     setPriceChangeDraft({ changeType: "Price Change", effectiveDate: "", remarks: "", newFee: "", newMode: "" });
+    setPriceChangeEffectiveDateDisplay("");
     setPriceChangeMessage("");
     setReallocationOriginalAllocations({});
     setAllocationModelChangeDraft({ modelId: "", effectiveDate: "", remarks: "" });
@@ -6715,8 +7001,14 @@ function Billings({
       return;
     }
 
-    if (!effectiveDateValue || !isValidDateValue(effectiveDateValue)) {
-      setPriceChangeMessage("A valid Price Change Effective Date is required.");
+    if (
+      !effectiveDateValue ||
+      !isValidFourDigitYear(effectiveDateValue) ||
+      !isValidDateValue(effectiveDateValue)
+    ) {
+      setPriceChangeMessage(
+        "Please enter a valid Effective Date using a 4-digit year.",
+      );
       return;
     }
 
@@ -6923,90 +7215,122 @@ function Billings({
       }
     }
 
-    setStage3Records((currentRecords) =>
-      currentRecords.map((record) => {
-        const affected = isCommon
-          ? getCommonComplexBillingGroupKey(record) === groupKey
-          : record.recordId === activeRecord.recordId;
-        if (!affected) return record;
+    const buildAppliedPriceChangeRecord = (record) => {
+      const affected = isCommon
+        ? getCommonComplexBillingGroupKey(record) === groupKey
+        : record.recordId === activeRecord.recordId;
+      if (!affected) return record;
 
-        const siteKey = getCommonComplexBillingSiteKey(record.screenCode);
-        const previousSiteFee = isCommon
-          ? normalizeValue(reallocationOriginalAllocations[siteKey]) ||
-            normalizeValue(allocationGroup?.[siteKey]?.allocatedFee)
-          : resolveSiteWiseSubscriptionFee(record) || normalizeValue(record.subscriptionFee);
-        const newSiteFee = isCommon
-          ? normalizeValue(allocationGroup?.[siteKey]?.allocatedFee)
-          : formatAmountValue(newFee);
-        const previousFee = isCommon
-          ? formatAmountValue(previousCommonFee)
-          : previousSiteFee;
+      const siteKey = getCommonComplexBillingSiteKey(record.screenCode);
+      const previousSiteFee = isCommon
+        ? normalizeValue(reallocationOriginalAllocations[siteKey]) ||
+          normalizeValue(allocationGroup?.[siteKey]?.allocatedFee)
+        : resolveSiteWiseSubscriptionFee(record) || normalizeValue(record.subscriptionFee);
+      const newSiteFee = isCommon
+        ? normalizeValue(allocationGroup?.[siteKey]?.allocatedFee)
+        : formatAmountValue(newFee);
+      const previousFee = isCommon
+        ? formatAmountValue(previousCommonFee)
+        : previousSiteFee;
 
-        const historyEntry = {
+      const historyEntry = {
+        transactionId,
+        historyId: transactionId,
+        previousFee,
+        newFee: formatAmountValue(newFee),
+        previousSiteFee,
+        newSiteFee,
+        effectiveDate: effectiveDateValue,
+        remarks,
+        changeType,
+        previousMode: normalizeValue(record.subscriptionMode),
+        newMode: modeChange ? newMode : normalizeValue(record.subscriptionMode),
+        oldModeEndDate: modeChange
+          ? (() => {
+              const date = new Date(effectiveDate);
+              date.setDate(date.getDate() - 1);
+              return formatLocalDateValue(date);
+            })()
+          : "",
+        scope: isCommon ? "Common Complex" : "Site",
+        validatedAt,
+        approvalStatus: "Not Required",
+        makerCheckerReady: true,
+      };
+
+      const canonicalSite = appliedPriceChange?.sites?.find(
+        (site) => normalizeValue(site?.id) === normalizeValue(record.backendSiteId),
+      );
+      const nextRecord = {
+        ...record,
+        ...(canonicalSite?.stage3Data || {}),
+        subscriptionFee: formatAmountValue(newFee),
+        subscriptionMode:
+          modeChange && effectiveDate <= new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
+            ? newMode
+            : record.subscriptionMode,
+        modeChangeEffectiveDate: modeChange ? effectiveDateValue : normalizeValue(record.modeChangeEffectiveDate),
+        modeChangeTargetMode: modeChange ? newMode : normalizeValue(record.modeChangeTargetMode),
+        priceChangeOverrideFee: isCommon ? normalizeValue(record.priceChangeOverrideFee) : formatAmountValue(newFee),
+        priceChangeRequest: {
+          ...(getPriceChangeRequest(record) || {}),
+          status: "Effective",
+          approvalStatus: "Not Required",
+          makerCheckerReady: true,
           transactionId,
-          historyId: transactionId,
-          previousFee,
-          newFee: formatAmountValue(newFee),
-          previousSiteFee,
-          newSiteFee,
           effectiveDate: effectiveDateValue,
           remarks,
           changeType,
           previousMode: normalizeValue(record.subscriptionMode),
           newMode: modeChange ? newMode : normalizeValue(record.subscriptionMode),
-          oldModeEndDate: modeChange
-            ? (() => {
-                const date = new Date(effectiveDate);
-                date.setDate(date.getDate() - 1);
-                return formatLocalDateValue(date);
-              })()
-            : "",
-          scope: isCommon ? "Common Complex" : "Site",
+          previousFee,
+          newFee: formatAmountValue(newFee),
           validatedAt,
-          approvalStatus: "Not Required",
-          makerCheckerReady: true,
-        };
+        },
+        priceChangeHistory: [
+          ...(Array.isArray(record.priceChangeHistory)
+            ? record.priceChangeHistory
+            : []),
+          historyEntry,
+        ],
+      };
+      return isCommon
+        ? invalidateFirstTimeBillingValidation(nextRecord, "subscriptionFee")
+        : nextRecord;
+    };
 
-        const canonicalSite = appliedPriceChange?.sites?.find(
-          (site) => normalizeValue(site?.id) === normalizeValue(record.backendSiteId),
-        );
-        const nextRecord = {
-          ...record,
-          ...(canonicalSite?.stage3Data || {}),
-          subscriptionFee: formatAmountValue(newFee),
-          subscriptionMode:
-            modeChange && effectiveDate <= new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate())
-              ? newMode
-              : record.subscriptionMode,
-          modeChangeEffectiveDate: modeChange ? effectiveDateValue : normalizeValue(record.modeChangeEffectiveDate),
-          modeChangeTargetMode: modeChange ? newMode : normalizeValue(record.modeChangeTargetMode),
-          priceChangeOverrideFee: isCommon ? normalizeValue(record.priceChangeOverrideFee) : formatAmountValue(newFee),
-          priceChangeRequest: {
-            ...(getPriceChangeRequest(record) || {}),
-            status: "Effective",
-            approvalStatus: "Not Required",
-            makerCheckerReady: true,
-            effectiveDate: effectiveDateValue,
-            remarks,
-            changeType,
-            previousMode: normalizeValue(record.subscriptionMode),
-            newMode: modeChange ? newMode : normalizeValue(record.subscriptionMode),
-            previousFee,
-            newFee: formatAmountValue(newFee),
-            validatedAt,
+    const nextStage3Records = stage3Records.map(buildAppliedPriceChangeRecord);
+
+    if (!isCommon) {
+      const nextRecord = nextStage3Records.find(
+        (record) => record.recordId === activeRecord.recordId,
+      );
+      try {
+        await billingApiRequest(
+          `/stage3/allocation-reallocation/${encodeURIComponent(activeRecord.backendSiteId)}/price-change/apply`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              transactionId,
+              screenCode: normalizeValue(activeRecord.screenCode),
+              changeType,
+              newFee,
+              newMode: modeChange ? newMode : normalizeValue(activeRecord.subscriptionMode),
+              effectiveDate: effectiveDateValue,
+              remarks,
+              changedBy: "Operations",
+            }),
           },
-          priceChangeHistory: [
-            ...(Array.isArray(record.priceChangeHistory)
-              ? record.priceChangeHistory
-              : []),
-            historyEntry,
-          ],
-        };
-        return isCommon
-          ? invalidateFirstTimeBillingValidation(nextRecord, "subscriptionFee")
-          : nextRecord;
-      }),
-    );
+        );
+      } catch (error) {
+        setPriceChangeMessage(
+          `Price Change could not be saved. No values became active. ${error.message}`,
+        );
+        return;
+      }
+    }
+
+    setStage3Records(nextStage3Records);
 
     if (isCommon) {
       setCommonComplexAllocations((currentAllocations) => {
@@ -7045,30 +7369,42 @@ function Billings({
       );
     }
 
-    setPriceChangeMessage(
-      modeChange
-        ? "Price Change applied. The old mode ends one day before the Effective Date and the new mode starts on the Effective Date. Any old-cycle credit/balance is retained for billing adjustment."
-        : "Price Change applied. Recurring Billing will use the approved value from the Effective Date, including pro-rata when the date falls inside a billing cycle.",
-    );
-    if (isCommon) {
-      window.alert("Price Change applied successfully.");
-      priceChangeTransactionIdRef.current = "";
-      setActiveRecordId("");
-      setActiveBillingSection("");
-    }
+    const successMessage =
+      "Price Change applied successfully. The previous commercial terms end one day before the Effective Date, and the new commercial terms take effect on the Effective Date. Any credit/balance from the previous billing cycle will be retained for billing adjustment.";
+    setPriceChangeMessage(successMessage);
+    window.alert(successMessage);
+    priceChangeTransactionIdRef.current = "";
+    setPriceChangeDraft({
+      changeType: "Price Change",
+      effectiveDate: "",
+      remarks: "",
+      newFee: "",
+      newMode: "",
+    });
+    setPriceChangeEffectiveDateDisplay("");
+    setReallocationOriginalAllocations({});
+    setAllocationModelChangeDraft({
+      modelId: "",
+      effectiveDate: "",
+      remarks: "",
+      planSelections: {},
+    });
+    setActiveRecordId("");
+    setActiveBillingSection("");
   }
 
-  const priceChangeRows = useMemo(() => {
+  const derivedPriceChangeRows = useMemo(() => {
     const rows = [];
     const seenCommonGroups = new Set();
 
     stage3Records.forEach((record) => {
       if (!record || isFoCOriginRecord(record)) return;
       if (!isPriceChangeLifecycleActive(record)) return;
+      if (!isPriceChangeRequestOpen(record)) return;
 
       // Finalized workflow rule:
-      // - before Billing Start Date: commercial corrections stay in First Time Billing
-      // - on/after Billing Start Date: later commercial differences belong here
+      // Only an explicitly initiated open work item belongs here. General
+      // post-billing eligibility does not create an operational PCR row.
       if (!hasFirstBillingStarted(record)) return;
 
       const currentFee = parseAmountValue(record.subscriptionFee);
@@ -7094,13 +7430,6 @@ function Billings({
             isPriceChangeRequestOpen(candidate),
         );
 
-        if (
-          !openRequest &&
-          (previousAllocationTotal <= 0 || Math.abs(previousAllocationTotal - currentFee) < 0.005)
-        ) {
-          return;
-        }
-
         const billableRows = getCommonComplexBillingRows(
           record,
           stage3Records,
@@ -7122,7 +7451,7 @@ function Billings({
           affectedSites: billableRows.length,
           status: openRequest
             ? normalizeValue(openRequest?.priceChangeRequest?.status) || "Pending Validation"
-            : "Reallocation Required",
+            : "Ready for New Change",
           isCommon: true,
         });
         return;
@@ -7151,12 +7480,6 @@ function Billings({
       );
 
       const openRequest = isPriceChangeRequestOpen(record);
-      const latestRequestStatus = normalizeValue(record?.priceChangeRequest?.status).toLowerCase();
-      if (!openRequest && latestRequestStatus === "effective") return;
-      if (
-        !openRequest &&
-        (previousFee === null || Math.abs(previousFee - currentFee) < 0.005)
-      ) return;
 
       rows.push({
         rowKey: `SITE::${screenCode}`,
@@ -7174,7 +7497,7 @@ function Billings({
         affectedSites: 1,
         status: openRequest
           ? normalizeValue(record?.priceChangeRequest?.status) || "Pending Validation"
-          : "Price Change Review",
+          : "Ready for New Change",
         isCommon: false,
       });
     });
@@ -7212,6 +7535,10 @@ function Billings({
     stage3Records,
   ]);
 
+  const priceChangeRows = useMemo(() => {
+    return derivedPriceChangeRows;
+  }, [derivedPriceChangeRows]);
+
   function handlePriceChangeColumnSort(key) {
     if (priceChangeSortKey === key) {
       setPriceChangeSortOrder((current) => (current === "asc" ? "desc" : "asc"));
@@ -7223,7 +7550,9 @@ function Billings({
 
   function handleOpenPriceChange(row) {
     const record = stage3Records.find((candidate) => candidate.recordId === row.recordId);
-    if (!record) return;
+    if (!record) {
+      return;
+    }
 
     if (row.isCommon) {
       const groupKey = getCommonComplexBillingGroupKey(record);
@@ -7419,8 +7748,10 @@ function Billings({
     const sixHoursMs = 6 * 60 * 60 * 1000;
     const nowMs = Date.now();
 
+    const sourceRecords = canonicalBillingRecordRows || billingRecords;
+
     return dedupeBillingRecords(
-      billingRecords.filter(
+      sourceRecords.filter(
         (record) =>
           !record?.isCombinedCommonBilling &&
           [
@@ -7428,21 +7759,14 @@ function Billings({
             "Sent to Billing Team",
           ].includes(normalizeValue(record.submissionStatus)),
       ),
-    )
+      )
       .map((record) => {
         const sourceRecordId = normalizeValue(record.sourceRecordId);
         const screenCode = normalizeValue(record.screenCode || record.siteScope);
-        const stage3Record =
-          stage3Records.find(
-            (site) =>
-              sourceRecordId &&
-              normalizeValue(site.recordId) === sourceRecordId,
-          ) ||
-          stage3Records.find(
-            (site) =>
-              screenCode &&
-              normalizeValue(site.screenCode) === screenCode,
-          );
+        const stage3Record = resolveBillingRecordSite(
+          record,
+          billingRecordSiteCandidates,
+        );
 
         const latestLifecycleRecord = billingRecords
           .filter((candidate) => {
@@ -7520,7 +7844,7 @@ function Billings({
 
         return 0;
       });
-  }, [billingRecords, stage3Records]);
+  }, [billingRecordSiteCandidates, billingRecords, canonicalBillingRecordRows]);
 
   const filteredSubmittedBillingRecords = useMemo(() => {
     const from = billingRecordsFromDate ? parseLocalDateValue(billingRecordsFromDate) : null;
@@ -7631,10 +7955,10 @@ function Billings({
   ]);
   const activeBillingRecord = useMemo(
     () =>
-      billingRecords.find(
+      submittedBillingRecords.find(
         (record) => record.billingRecordId === activeBillingRecordId,
       ) || null,
-    [activeBillingRecordId, billingRecords],
+    [activeBillingRecordId, submittedBillingRecords],
   );
 
   const billingRecordFinancialRows = useMemo(() => {
@@ -8892,7 +9216,7 @@ function Billings({
   useEffect(() => {
     if (
       activeBillingRecordId &&
-      !billingRecords.some(
+      !submittedBillingRecords.some(
         (record) => record.billingRecordId === activeBillingRecordId,
       )
     ) {
@@ -8900,7 +9224,7 @@ function Billings({
       setBillingRecordDraft(null);
       setBillingRecordSaveMessage("");
     }
-  }, [activeBillingRecordId, billingRecords]);
+  }, [activeBillingRecordId, submittedBillingRecords]);
 
   useEffect(() => {
     setSelectedVerificationIds((currentIds) =>
@@ -9705,6 +10029,18 @@ function Billings({
   }
 
   function handleEditBillingRecord(recordId) {
+    const record = submittedBillingRecords.find(
+      (candidate) => candidate.billingRecordId === recordId,
+    );
+    const currentSite = resolveBillingRecordSite(
+      record,
+      billingRecordSiteCandidates,
+    );
+    if (!record || !currentSite) {
+      alert("Unable to resolve the current Site for editing this Billing Record.");
+      return;
+    }
+
     setBillingRecordSaveMessage("");
     setBillingRecordEditMode(true);
     setActiveBillingRecordId(recordId);
@@ -13286,6 +13622,11 @@ To proceed with the remaining eligible sites/complexes while excluding this site
 
   return (
     <section className="billings-page">
+      {billingSummaryError && (
+        <div className="billings-page__modal-notice" role="alert">
+          {billingSummaryError} Existing local data is being preserved.
+        </div>
+      )}
       <div
         className="billings-page__header-controls"
         aria-label="Stage 3 controls"
@@ -13402,7 +13743,9 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                 First Time Billing
               </p>
               <span className="billings-page__card-badge billings-page__card-badge--editable">
-                {firstTimeVisibleRows.length} Records
+                {billingSummaryLoading
+                  ? "Loading..."
+                  : `${formatSummaryCount(canonicalBillingSummary?.firstTimeBilling)} Records`}
               </span>
             </div>
 
@@ -13865,7 +14208,9 @@ To proceed with the remaining eligible sites/complexes while excluding this site
           <div>
             <p className="billings-page__card-title">Price Change &amp; Reallocation</p>
             <span className="billings-page__card-badge billings-page__card-badge--editable">
-              {priceChangeRows.length} Records
+              {billingSummaryLoading
+                ? "Loading..."
+                : `${priceChangeRows.length} ${priceChangeRows.length === 1 ? "Record" : "Records"}`}
             </span>
           </div>
           <button
@@ -13907,11 +14252,12 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                     <tr>
                       <SortableHeader label="Billing Code" sortKey="billingCode" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Complex Code" sortKey="complexCode" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
-                      <SortableHeader label="Screen Code" sortKey="screenCode" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
+                      <SortableHeader label="Affected Screens" sortKey="screenCode" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Change Type" sortKey="changeType" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Previous Fee" sortKey="previousFee" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Current Fee" sortKey="currentFee" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Billing Start Date" sortKey="billingStartDate" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
+                      <SortableHeader label="Status" sortKey="status" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <SortableHeader label="Site Count" sortKey="affectedSites" activeKey={priceChangeSortKey} direction={priceChangeSortOrder} onSort={handlePriceChangeColumnSort} />
                       <th className="billings-page__foc-action-header">Action</th>
                     </tr>
@@ -13925,7 +14271,8 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                         <td>{row.changeType}</td>
                         <td>{row.previousFee ? `₹${row.previousFee}` : "-"}</td>
                         <td>{row.currentFee ? `₹${row.currentFee}` : "-"}</td>
-                        <td>{row.billingStartDate || "-"}</td>
+                        <td>{formatBillingDateDisplay(row.billingStartDate)}</td>
+                        <td>{row.status || "-"}</td>
                         <td>{row.affectedSites}</td>
                         <td>
                           <button
@@ -13933,7 +14280,7 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                             className="billings-page__edit-button"
                             onClick={() => handleOpenPriceChange(row)}
                           >
-                            {row.isCommon ? "Reallocate" : "Review"}
+                            Reallocate
                           </button>
                         </td>
                       </tr>
@@ -13972,27 +14319,14 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                     )}
                     <div className="billings-page__field"><label>New Common Subscription Fee *</label><input type="text" inputMode="decimal" value={priceChangeDraft.newFee} disabled={Boolean(getPriceChangeInvoiceLock(activeRecord, parseLocalDateValue(priceChangeDraft.effectiveDate)))} onChange={(event) => { setPriceChangeMessage(""); setPriceChangeDraft((current) => ({ ...current, newFee: sanitizeAmount(event.target.value) })); }} onBlur={handleNewSubscriptionFeeBlur} /></div>
                     <div className="billings-page__field"><label>Price Change Effective Date *</label><input
-                      type="date"
-                      value={priceChangeDraft.effectiveDate}
-                      min={getMinimumPriceChangeEffectiveDate(activeRecord)}
-                      disabled={Boolean(getPriceChangeInvoiceLock(activeRecord, parseLocalDateValue(priceChangeDraft.effectiveDate)))}
-                      onChange={(event) => {
-                        const nextValue = event.target.value;
-                        const minimumValue = getMinimumPriceChangeEffectiveDate(activeRecord);
-
-                        if (nextValue && minimumValue && nextValue < minimumValue) {
-                          setPriceChangeMessage(
-                            `Price Change Effective Date must be on or after ${formatBillingDateDisplay(minimumValue)} for this billing mode.`,
-                          );
-                          return;
-                        }
-
-                        setPriceChangeMessage("");
-                        setPriceChangeDraft((current) => ({
-                          ...current,
-                          effectiveDate: nextValue,
-                        }));
-                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="DD-MM-YYYY"
+                      value={priceChangeEffectiveDateDisplay}
+                      onChange={handlePriceChangeEffectiveDateInput}
+                      onBlur={handlePriceChangeEffectiveDateBlur}
+                      aria-label="Price Change Effective Date"
                     /></div>
                     {getPriceChangeInvoiceLock(activeRecord, parseLocalDateValue(priceChangeDraft.effectiveDate)) && (
                       <p className="billings-page__helper" style={{ gridColumn: "1 / -1" }}>
@@ -14255,26 +14589,14 @@ To proceed with the remaining eligible sites/complexes while excluding this site
                     <div className="billings-page__field"><label>Current Subscription Fee</label><input type="text" value={resolveSiteWiseSubscriptionFee(activeRecord) || activeRecord.subscriptionFee || ""} readOnly /></div>
                     <div className="billings-page__field"><label>New Subscription Fee *</label><input type="text" inputMode="decimal" value={priceChangeDraft.newFee} onChange={(event) => { setPriceChangeMessage(""); setPriceChangeDraft((current) => ({ ...current, newFee: sanitizeAmount(event.target.value) })); }} onBlur={handleNewSubscriptionFeeBlur} /></div>
                     <div className="billings-page__field"><label>Price Change Effective Date *</label><input
-                      type="date"
-                      value={priceChangeDraft.effectiveDate}
-                      min={getMinimumPriceChangeEffectiveDate(activeRecord)}
-                      onChange={(event) => {
-                        const nextValue = event.target.value;
-                        const minimumValue = getMinimumPriceChangeEffectiveDate(activeRecord);
-
-                        if (nextValue && minimumValue && nextValue < minimumValue) {
-                          setPriceChangeMessage(
-                            `Price Change Effective Date must be on or after ${formatBillingDateDisplay(minimumValue)} for this billing mode.`,
-                          );
-                          return;
-                        }
-
-                        setPriceChangeMessage("");
-                        setPriceChangeDraft((current) => ({
-                          ...current,
-                          effectiveDate: nextValue,
-                        }));
-                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="DD-MM-YYYY"
+                      value={priceChangeEffectiveDateDisplay}
+                      onChange={handlePriceChangeEffectiveDateInput}
+                      onBlur={handlePriceChangeEffectiveDateBlur}
+                      aria-label="Price Change Effective Date"
                     /></div>
                     <div className="billings-page__field" style={{ gridColumn: "1 / -1" }}><label>Remarks / Reason *</label><textarea rows={3} value={priceChangeDraft.remarks} onChange={(event) => setPriceChangeDraft((current) => ({ ...current, remarks: event.target.value }))} placeholder="Enter reason for the price change" /></div>
                   </div>
@@ -14324,7 +14646,9 @@ To proceed with the remaining eligible sites/complexes while excluding this site
           <div>
             <p className="billings-page__card-title">Recurring Billing</p>
             <span className="billings-page__card-badge billings-page__card-badge--editable">
-              {recurringRows.length} Records
+              {billingSummaryLoading
+                ? "Loading..."
+                : `${formatSummaryCount(canonicalBillingSummary?.recurringBilling)} Records`}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "end", gap: 10, marginLeft: "auto", flexShrink: 0 }}>
@@ -14626,7 +14950,9 @@ To proceed with the remaining eligible sites/complexes while excluding this site
           <div>
             <p className="billings-page__card-title">Billing Records</p>
             <span className="billings-page__card-badge billings-page__card-badge--editable">
-              {submittedBillingRecords.length} Records
+              {billingSummaryLoading
+                ? "Loading..."
+                : `${formatSummaryCount(canonicalBillingSummary?.billingRecords)} Records`}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "end", gap: 10, marginLeft: "auto", flexShrink: 0 }}>

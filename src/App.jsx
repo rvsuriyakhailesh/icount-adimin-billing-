@@ -16,6 +16,10 @@ import { normalizeIdInput } from "./utils/idValidation";
 const BILLING_API_BASE =
   import.meta.env.VITE_BILLING_API_BASE || "http://localhost:4100/api";
 
+function normalizeValue(value) {
+  return String(value || "").trim();
+}
+
 
 function mapOtfTypeFromBackend(value) {
   if (value === "NonRefundable") return "Non-Refundable";
@@ -845,6 +849,7 @@ function App() {
   const [stage1ReadinessRecords, setStage1ReadinessRecords] = useState([]);
   const [stage2Records, setStage2Records] = useState([]);
   const [stage3Records, setStage3Records] = useState([]);
+  const [canonicalSites, setCanonicalSites] = useState([]);
   const [billingRecords, setBillingRecords] = useState([]);
   const [commonComplexAllocations, setCommonComplexAllocations] = useState({});
   const [incentiveStates, setIncentiveStates] = useState({});
@@ -869,6 +874,13 @@ function App() {
     () => stage3Records.filter(isCurrentStage3Record),
     [stage3Records],
   );
+  const canonicalSiteRecords = useMemo(
+    () =>
+      canonicalSites
+        .map((site) => buildStage3RecordFromBackendSite(site, canonicalSites))
+        .filter((record) => normalizeIdInput(record.screenCode)),
+    [canonicalSites],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -877,6 +889,7 @@ function App() {
       try {
         const sites = await fetchBackendSites();
         if (cancelled) return;
+        setCanonicalSites(sites);
 
         const backendStage1Records = sites
           .filter((site) => {
@@ -998,6 +1011,7 @@ function App() {
       try {
         const sites = await fetchBackendSites();
         if (cancelled) return;
+        setCanonicalSites(sites);
 
         // Common commercial terms are the source of truth for unbilled work.
         // Stage snapshots and saved allocation totals are historical workflow
@@ -2211,6 +2225,7 @@ function App() {
           stage2Records={stage2Records}
           setStage2Records={setStage2Records}
           stage3Records={currentStage3Records}
+          canonicalSiteRecords={canonicalSiteRecords}
           setStage3Records={setStage3Records}
           billingRecords={billingRecords}
           setBillingRecords={setBillingRecords}

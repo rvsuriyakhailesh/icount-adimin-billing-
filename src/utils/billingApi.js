@@ -41,7 +41,18 @@ export async function billingApiRequest(path, options = {}) {
     );
   }
 
+  if (
+    typeof window !== "undefined" &&
+    String(options.method || "GET").toUpperCase() !== "GET"
+  ) {
+    window.dispatchEvent(new CustomEvent("billing-summary-updated"));
+  }
+
   return body?.data ?? body;
+}
+
+export async function getStage3BillingSummary() {
+  return billingApiRequest("/stage3/allocation-reallocation/billing-summary");
 }
 
 const LEGACY_CONFIG_KEY = "billing_inc_allocation_model_config";
