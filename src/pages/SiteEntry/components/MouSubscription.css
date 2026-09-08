@@ -1,0 +1,399 @@
+.mou-subscription {
+  display: grid;
+  gap: 18px;
+  color: #eef6ff;
+}
+
+.mou-subscription__section {
+  padding: 18px;
+  border: 1px solid rgba(91, 151, 211, 0.24);
+  border-radius: 16px;
+  background: rgba(5, 24, 41, 0.72);
+}
+
+.mou-subscription__section h4 {
+  margin: 0 0 16px;
+  color: #f4f8ff;
+  font-size: 16px;
+}
+
+.mou-subscription__form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: start;
+}
+
+.mou-subscription__field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mou-subscription__field > span {
+  color: #b9d8f7;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mou-subscription__field small {
+  color: #7faad2;
+  font-size: 11px;
+}
+
+.mou-subscription__field input,
+.mou-subscription__field select,
+.mou-subscription__field textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(89, 145, 205, 0.38);
+  border-radius: 10px;
+  background: rgba(3, 20, 35, 0.86);
+  color: #f6fbff;
+  outline: none;
+}
+
+.mou-subscription__field input,
+.mou-subscription__field select {
+  min-height: 40px;
+  padding: 0 11px;
+}
+
+.mou-subscription__field textarea {
+  min-height: 92px;
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+.mou-subscription__field input::placeholder,
+.mou-subscription__field textarea::placeholder {
+  color: #6f94b8;
+}
+
+.mou-subscription__field input:focus,
+.mou-subscription__field select:focus,
+.mou-subscription__field textarea:focus {
+  border-color: rgba(90, 137, 255, 0.92);
+  box-shadow: 0 0 0 2px rgba(77, 112, 219, 0.14);
+}
+
+.mou-subscription__field input:disabled,
+.mou-subscription__field select:disabled,
+.mou-subscription__field textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mou-subscription__field-error {
+  margin-top: 10px;
+  color: #ff9e9e;
+  font-size: 12px;
+}
+
+.mou-subscription__renewal-alert {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid rgba(222, 166, 70, 0.32);
+  border-radius: 10px;
+  background: rgba(222, 166, 70, 0.1);
+  color: #ffd483;
+  font-size: 12px;
+}
+
+.mou-subscription__renewal-alert--expired {
+  border-color: rgba(207, 80, 80, 0.34);
+  background: rgba(207, 80, 80, 0.1);
+  color: #ff9f9f;
+}
+
+.mou-subscription__pricing-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mou-subscription__pricing-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(90, 150, 211, 0.25);
+  border-radius: 12px;
+  background: rgba(4, 22, 38, 0.55);
+  cursor: pointer;
+}
+
+.mou-subscription__pricing-option input {
+  margin-top: 3px;
+}
+
+.mou-subscription__pricing-option > span {
+  display: grid;
+  gap: 4px;
+}
+
+.mou-subscription__pricing-option strong {
+  color: #f5f9ff;
+  font-size: 13px;
+}
+
+.mou-subscription__pricing-option small {
+  color: #8eb7df;
+  line-height: 1.4;
+}
+
+.mou-subscription__pricing-option--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mou-subscription__site-pricing-panel,
+.mou-subscription__workspace {
+  margin-top: 14px;
+  padding: 15px;
+  border: 1px solid rgba(91, 151, 211, 0.2);
+  border-radius: 14px;
+  background: rgba(3, 20, 35, 0.5);
+}
+
+.mou-subscription__site-pricing-note,
+.mou-subscription__workspace-note,
+.mou-subscription__workspace-helper,
+.mou-subscription__message,
+.mou-subscription__gst-helper {
+  color: #91bce6;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.mou-subscription__common-otf-block {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.mou-subscription__common-otf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.mou-subscription__common-otf-bottom-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 1fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.mou-subscription__gst-helper {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(90, 150, 211, 0.2);
+  border-radius: 10px;
+  background: rgba(7, 31, 51, 0.62);
+}
+
+.mou-subscription__workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mou-subscription__workspace-header h4 {
+  margin: 0;
+}
+
+.mou-subscription__workspace-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(72, 105, 204, 0.2);
+  color: #a9c6ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mou-subscription__workspace-note {
+  margin: 8px 0 0;
+}
+
+.mou-subscription__workspace-helper {
+  margin-top: 8px;
+}
+
+.mou-subscription__pricing-table-wrapper {
+  width: 100%;
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.mou-subscription__pricing-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.mou-subscription__pricing-table th,
+.mou-subscription__pricing-table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(90, 150, 211, 0.16);
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mou-subscription__pricing-table th {
+  color: #8eb9e5;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mou-subscription__pricing-table td {
+  color: #f2f7fd;
+  font-size: 12px;
+}
+
+.mou-subscription__pricing-table input,
+.mou-subscription__pricing-table select {
+  width: 100%;
+  min-height: 36px;
+  box-sizing: border-box;
+  border: 1px solid rgba(89, 145, 205, 0.35);
+  border-radius: 8px;
+  background: rgba(3, 20, 35, 0.84);
+  color: #f6fbff;
+  padding: 0 9px;
+  text-overflow: ellipsis;
+}
+
+.mou-subscription__pricing-col--group {
+  width: 7%;
+}
+
+.mou-subscription__pricing-col--sites {
+  width: 25%;
+}
+
+.mou-subscription__pricing-col--mode {
+  width: 13%;
+}
+
+.mou-subscription__pricing-col--otf-applicable {
+  width: 9%;
+}
+
+.mou-subscription__pricing-col--otf-type {
+  width: 14%;
+}
+
+.mou-subscription__pricing-col--otf-amount {
+  width: 12%;
+}
+
+.mou-subscription__pricing-col--subscription-fee {
+  width: 13%;
+}
+
+.mou-subscription__pricing-col--action {
+  width: 7%;
+}
+
+.mou-subscription__pricing-remove {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(196, 78, 78, 0.34);
+  border-radius: 8px;
+  background: rgba(196, 78, 78, 0.1);
+  color: #ff9a9a;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.mou-subscription__workspace-actions,
+.mou-subscription__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.mou-subscription__workspace-actions-right {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mou-subscription__workspace-actions button,
+.mou-subscription__button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(82, 132, 238, 0.7);
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(52, 103, 204, 0.92),
+    rgba(83, 75, 185, 0.92)
+  );
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mou-subscription__button--secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-color: rgba(90, 150, 211, 0.32);
+  background: rgba(5, 27, 46, 0.82);
+  color: #b9d8f7;
+}
+
+.mou-subscription__message {
+  margin-top: 12px;
+}
+
+@media (max-width: 1100px) {
+  .mou-subscription__form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mou-subscription__common-otf-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .mou-subscription__form-grid,
+  .mou-subscription__pricing-options,
+  .mou-subscription__common-otf-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mou-subscription__actions,
+  .mou-subscription__workspace-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mou-subscription__workspace-actions-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .mou-subscription__button,
+  .mou-subscription__workspace-actions button {
+    width: 100%;
+  }
+}

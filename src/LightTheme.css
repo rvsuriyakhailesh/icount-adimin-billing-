@@ -1,0 +1,853 @@
+/* =========================================================
+   Billing & INC - Global Light Theme Override
+   Keeps existing layouts and functionality unchanged.
+   Import AFTER App.css so these rules win.
+   ========================================================= */
+
+:root {
+  color-scheme: light;
+  --light-bg: #ffffff;
+  --light-panel: #ffffff;
+  --light-soft: #f7f7f8;
+  --light-soft-2: #f3f4f6;
+  --light-border: #d9dee7;
+  --light-border-strong: #cbd5e1;
+  --light-text: #111827;
+  --light-text-2: #374151;
+  --light-muted: #6b7280;
+  --light-placeholder: #9ca3af;
+  --light-button: #374151;
+  --light-button-hover: #1f2937;
+}
+
+html,
+body,
+#root {
+  background: var(--light-bg) !important;
+  color: var(--light-text) !important;
+}
+
+/* ---------- Shared application shell ---------- */
+
+main,
+.app-layout,
+.app-layout__main,
+.app-layout__content,
+.app-layout__page,
+.main-content,
+.main-panel,
+.content-area,
+.page-content {
+  background: var(--light-bg) !important;
+  color: var(--light-text) !important;
+}
+
+.app-layout__header,
+.app-layout__topbar,
+.app-header,
+.main-header,
+.page-header,
+.page-topbar,
+.topbar {
+  background: var(--light-bg) !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+.app-layout__header *,
+.app-layout__topbar *,
+.app-header *,
+.main-header *,
+.page-header *,
+.page-topbar *,
+.topbar * {
+  color: var(--light-text) !important;
+}
+
+/* Keep the small BILLING AND INC eyebrow neutral grey. */
+.app-layout__header p,
+.app-layout__topbar p,
+.app-header p,
+.main-header p,
+.page-header p,
+.page-topbar p,
+.topbar p {
+  color: var(--light-muted) !important;
+}
+
+/* ---------- Workflow page roots ---------- */
+
+.site-entry,
+.installations-page,
+.billings-page,
+.incentive-page,
+.erp-settings {
+  background: var(--light-bg) !important;
+  color: var(--light-text) !important;
+}
+
+/* ---------- Major cards / panels ---------- */
+
+.installations-page [class*="__card"],
+.installations-page [class*="__panel"],
+.installations-page [class*="__details"],
+.installations-page [class*="__section"],
+.installations-page [class*="__workspace"],
+.installations-page [class*="__record"],
+.installations-page [class*="__queue"],
+
+.billings-page [class*="__card"],
+.billings-page [class*="__panel"],
+.billings-page [class*="__details"],
+.billings-page [class*="__section"],
+.billings-page [class*="__workspace"],
+.billings-page [class*="__record"],
+
+.incentive-page [class*="__card"],
+.incentive-page [class*="__details"],
+.incentive-page [class*="__section"],
+.incentive-page [class*="__toolbar"],
+
+.erp-settings [class*="__card"],
+.erp-settings [class*="__panel"],
+.erp-settings [class*="__section"] {
+  background: var(--light-panel) !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Headings / labels / descriptive text ---------- */
+
+.installations-page h1,
+.installations-page h2,
+.installations-page h3,
+.installations-page h4,
+.installations-page strong,
+.installations-page label,
+
+.billings-page h1,
+.billings-page h2,
+.billings-page h3,
+.billings-page h4,
+.billings-page strong,
+.billings-page label,
+
+.incentive-page h1,
+.incentive-page h2,
+.incentive-page h3,
+.incentive-page h4,
+.incentive-page strong,
+.incentive-page label,
+
+.erp-settings h1,
+.erp-settings h2,
+.erp-settings h3,
+.erp-settings h4,
+.erp-settings strong,
+.erp-settings label {
+  color: var(--light-text) !important;
+}
+
+.installations-page p,
+.installations-page span:not([class*="status"]):not([class*="badge"]),
+.billings-page p,
+.billings-page span:not([class*="status"]):not([class*="badge"]),
+.incentive-page p,
+.incentive-page span:not([class*="status"]):not([class*="badge"]),
+.erp-settings p,
+.erp-settings span:not([class*="status"]):not([class*="badge"]) {
+  color: var(--light-muted) !important;
+}
+
+/* Eyebrows / subtitles */
+.installations-page [class*="eyebrow"],
+.billings-page [class*="eyebrow"],
+.incentive-page [class*="eyebrow"],
+.erp-settings [class*="eyebrow"],
+.installations-page [class*="subtitle"],
+.billings-page [class*="subtitle"],
+.incentive-page [class*="subtitle"],
+.erp-settings [class*="subtitle"],
+.installations-page [class*="section-text"],
+.billings-page [class*="section-text"],
+.incentive-page [class*="section-text"],
+.erp-settings [class*="section-text"] {
+  color: var(--light-muted) !important;
+}
+
+/* ---------- Form controls ---------- */
+
+.installations-page input,
+.installations-page select,
+.installations-page textarea,
+
+.billings-page input,
+.billings-page select,
+.billings-page textarea,
+
+.incentive-page input,
+.incentive-page select,
+.incentive-page textarea,
+
+.erp-settings input,
+.erp-settings select,
+.erp-settings textarea {
+  background: #ffffff !important;
+  border-color: var(--light-border-strong) !important;
+  color: var(--light-text) !important;
+  box-shadow: none !important;
+}
+
+.installations-page input::placeholder,
+.installations-page textarea::placeholder,
+.billings-page input::placeholder,
+.billings-page textarea::placeholder,
+.incentive-page input::placeholder,
+.incentive-page textarea::placeholder,
+.erp-settings input::placeholder,
+.erp-settings textarea::placeholder {
+  color: var(--light-placeholder) !important;
+}
+
+.installations-page input:disabled,
+.installations-page select:disabled,
+.installations-page textarea:disabled,
+.installations-page input[readonly],
+.billings-page input:disabled,
+.billings-page select:disabled,
+.billings-page textarea:disabled,
+.billings-page input[readonly],
+.incentive-page input:disabled,
+.incentive-page select:disabled,
+.incentive-page textarea:disabled,
+.incentive-page input[readonly],
+.erp-settings input:disabled,
+.erp-settings select:disabled,
+.erp-settings textarea:disabled,
+.erp-settings input[readonly] {
+  background: var(--light-soft-2) !important;
+  color: var(--light-muted) !important;
+}
+
+/* ---------- Tables ---------- */
+
+.installations-page table,
+.billings-page table,
+.incentive-page table,
+.erp-settings table {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+}
+
+.installations-page thead,
+.billings-page thead,
+.incentive-page thead,
+.erp-settings thead,
+.installations-page th,
+.billings-page th,
+.incentive-page th,
+.erp-settings th {
+  background: var(--light-soft-2) !important;
+  color: var(--light-text-2) !important;
+  border-color: var(--light-border) !important;
+}
+
+.installations-page td,
+.billings-page td,
+.incentive-page td,
+.erp-settings td {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+  border-color: #e5e7eb !important;
+}
+
+.installations-page tbody tr:hover td,
+.billings-page tbody tr:hover td,
+.incentive-page tbody tr:hover td,
+.erp-settings tbody tr:hover td {
+  background: #fafafa !important;
+}
+
+/* ---------- Empty states ---------- */
+
+.installations-page [class*="__empty"],
+.billings-page [class*="__empty"],
+.incentive-page [class*="__empty"],
+.erp-settings [class*="__empty"],
+.installations-page [class*="verification-empty"],
+.billings-page [class*="verification-empty"],
+.incentive-page [class*="verification-empty"] {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-muted) !important;
+}
+
+/* ---------- Primary actions ---------- */
+
+.installations-page [class*="primary-button"],
+.billings-page [class*="primary-button"],
+.incentive-page [class*="primary-button"],
+.erp-settings [class*="primary-button"] {
+  background: var(--light-button) !important;
+  border-color: var(--light-button) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.installations-page [class*="primary-button"]:hover:not(:disabled),
+.billings-page [class*="primary-button"]:hover:not(:disabled),
+.incentive-page [class*="primary-button"]:hover:not(:disabled),
+.erp-settings [class*="primary-button"]:hover:not(:disabled) {
+  background: var(--light-button-hover) !important;
+  border-color: var(--light-button-hover) !important;
+}
+
+/* ---------- Secondary / normal actions ---------- */
+
+.installations-page [class*="secondary-button"],
+.installations-page [class*="edit-button"],
+.installations-page [class*="close-button"],
+
+.billings-page [class*="secondary-button"],
+.billings-page [class*="edit-button"],
+.billings-page [class*="close-button"],
+
+.incentive-page [class*="secondary-button"],
+.incentive-page [class*="edit-button"],
+.incentive-page [class*="close-button"],
+
+.erp-settings [class*="secondary-button"],
+.erp-settings [class*="table-button"] {
+  background: #ffffff !important;
+  border-color: var(--light-border-strong) !important;
+  color: var(--light-text-2) !important;
+  box-shadow: none !important;
+}
+
+.installations-page [class*="secondary-button"]:hover:not(:disabled),
+.installations-page [class*="edit-button"]:hover:not(:disabled),
+.billings-page [class*="secondary-button"]:hover:not(:disabled),
+.billings-page [class*="edit-button"]:hover:not(:disabled),
+.incentive-page [class*="secondary-button"]:hover:not(:disabled),
+.erp-settings [class*="secondary-button"]:hover:not(:disabled),
+.erp-settings [class*="table-button"]:hover:not(:disabled) {
+  background: var(--light-soft-2) !important;
+}
+
+/* ---------- Workspace / tab buttons ---------- */
+
+.installations-page [class*="toggle-button"],
+.billings-page [class*="toggle-button"],
+.incentive-page [class*="toggle-button"],
+.erp-settings [class*="toggle-button"] {
+  background: #ffffff !important;
+  border-color: var(--light-border-strong) !important;
+  color: var(--light-text-2) !important;
+}
+
+.installations-page [class*="toggle-button--active"],
+.billings-page [class*="toggle-button--active"],
+.incentive-page [class*="toggle-button--active"],
+.erp-settings [class*="toggle-button--active"] {
+  background: var(--light-soft-2) !important;
+  border-color: #9ca3af !important;
+  color: var(--light-text) !important;
+}
+
+/* ---------- Modals ---------- */
+
+.installations-page [class*="modal-backdrop"],
+.billings-page [class*="modal-backdrop"],
+.incentive-page [class*="modal-backdrop"],
+.erp-settings [class*="modal-backdrop"] {
+  background: rgba(17, 24, 39, 0.30) !important;
+}
+
+.installations-page [class*="__modal"],
+.billings-page [class*="__modal"],
+.incentive-page [class*="__modal"],
+.erp-settings [class*="__modal"] {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  box-shadow: 0 20px 55px rgba(17, 24, 39, 0.16) !important;
+}
+
+/* ---------- Keep semantic status badges readable ---------- */
+
+[class*="status--ready"],
+[class*="status--active"],
+[class*="badge--ready"],
+[class*="badge--active"] {
+  color: #166534 !important;
+}
+
+[class*="status--pending"],
+[class*="status--warning"],
+[class*="badge--pending"],
+[class*="badge--warning"] {
+  color: #92400e !important;
+}
+
+[class*="status--error"],
+[class*="status--inactive"],
+[class*="badge--error"],
+[class*="badge--inactive"] {
+  color: #991b1b !important;
+}
+
+/* ---------- Shared stage header controls ----------
+   Handles the dark Stage 1 / Stage 2 / Stage 3 top bar visible
+   in the screenshots, regardless of the exact AppLayout class.
+   ---------------------------------------------------------- */
+
+body > #root > div > main > header,
+body > #root main > header:first-child {
+  background: #ffffff !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+}
+
+body > #root main > header:first-child h1,
+body > #root main > header:first-child h2,
+body > #root main > header:first-child h3,
+body > #root main > header:first-child strong {
+  color: var(--light-text) !important;
+}
+
+body > #root main > header:first-child p,
+body > #root main > header:first-child span {
+  color: var(--light-muted) !important;
+}
+
+/* Generic stage controls in the top-right. */
+body > #root main > header:first-child button {
+  background: #ffffff !important;
+  border-color: var(--light-border-strong) !important;
+  color: var(--light-text-2) !important;
+  box-shadow: none !important;
+}
+
+body > #root main > header:first-child button:hover:not(:disabled) {
+  background: var(--light-soft-2) !important;
+}
+
+/* ---------- Governance pages ----------
+   Their inner cards are already white. This removes the dark shell
+   around History, Audit and Downloads.
+   --------------------------------------------------------------- */
+
+main > div[style*="padding: 24"],
+main > div[style*="padding:24"] {
+  background: #ffffff !important;
+  color: var(--light-text) !important;
+}
+
+/* ---------- Scrollbars ---------- */
+
+* {
+  scrollbar-color: #a3a3a3 #f3f4f6;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #a3a3a3;
+  border-radius: 999px;
+}
+
+
+/* =========================================================
+   STRICT LIGHT OVERRIDES
+   Removes remaining navy / blue / purple surfaces, including
+   nested cards and JSX inline background styles.
+   ========================================================= */
+
+/* ---------- Stage 1: Subscription / Incentive Beneficiary ---------- */
+
+.mou-subscription {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+.mou-subscription section,
+.mou-subscription article,
+.mou-subscription fieldset,
+.mou-subscription > div,
+.mou-subscription [class*="__section"],
+.mou-subscription [class*="__card"],
+.mou-subscription [class*="__panel"],
+.mou-subscription [class*="__box"],
+.mou-subscription [class*="__group"],
+.mou-subscription [class*="__option"],
+.mou-subscription [class*="__beneficiary"],
+.mou-subscription [class*="__pricing"] {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+.mou-subscription h1,
+.mou-subscription h2,
+.mou-subscription h3,
+.mou-subscription h4,
+.mou-subscription h5,
+.mou-subscription label,
+.mou-subscription strong {
+  color: #111827 !important;
+}
+
+.mou-subscription p,
+.mou-subscription small,
+.mou-subscription span:not([class*="status"]):not([class*="badge"]) {
+  color: #6b7280 !important;
+}
+
+.mou-subscription input,
+.mou-subscription select,
+.mou-subscription textarea {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+.mou-subscription input::placeholder,
+.mou-subscription textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+.mou-subscription input:disabled,
+.mou-subscription select:disabled,
+.mou-subscription textarea:disabled,
+.mou-subscription input[readonly] {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+}
+
+.mou-subscription table,
+.mou-subscription thead,
+.mou-subscription tbody,
+.mou-subscription tr,
+.mou-subscription td {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+}
+
+.mou-subscription th {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border-color: #d9dee7 !important;
+}
+
+/* Radio / option cards in Incentive Beneficiary */
+.mou-subscription label:has(input[type="radio"]),
+.mou-subscription label:has(input[type="checkbox"]) {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+}
+
+/* ---------- Installations: remove all remaining dark nested surfaces ---------- */
+
+.installations-page section,
+.installations-page article,
+.installations-page fieldset,
+.installations-page [class*="__panel"],
+.installations-page [class*="__workspace"],
+.installations-page [class*="__detail"],
+.installations-page [class*="__site-panel"],
+.installations-page [class*="__form"],
+.installations-page [class*="__queue"],
+.installations-page [class*="__readiness"],
+.installations-page [class*="__block"] {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* Installation site cards may carry inline blue/purple backgrounds. */
+.installations-page [class*="__site-btn"] {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+.installations-page [class*="__site-btn--active"] {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Billings: remove remaining navy cards including Paused ---------- */
+
+.billings-page section,
+.billings-page article,
+.billings-page fieldset,
+.billings-page [class*="__panel"],
+.billings-page [class*="__workspace"],
+.billings-page [class*="__details"],
+.billings-page [class*="__record"],
+.billings-page [class*="__closure"],
+.billings-page [class*="__billing-record"],
+.billings-page [class*="__recurring"],
+.billings-page [class*="__paused"],
+.billings-page [class*="__inactive"] {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Incentive: force remaining dark card to white ---------- */
+
+.incentive-page,
+.incentive-page section,
+.incentive-page article,
+.incentive-page fieldset,
+.incentive-page [class*="__card"],
+.incentive-page [class*="__panel"],
+.incentive-page [class*="__toolbar"],
+.incentive-page [class*="__details"],
+.incentive-page [class*="__milestone"],
+.incentive-page [class*="__summary"] {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Settings ---------- */
+
+.erp-settings,
+.erp-settings section,
+.erp-settings article,
+.erp-settings fieldset,
+.erp-settings [class*="__card"],
+.erp-settings [class*="__panel"],
+.erp-settings [class*="__section"],
+.erp-settings [class*="mapping"],
+.erp-settings [class*="allocation"] {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- Remove remaining blue / purple action backgrounds ---------- */
+
+/* Regular action buttons in all workflow pages */
+.site-entry button:not([class*="status"]):not([class*="badge"]),
+.mou-subscription button:not([class*="status"]):not([class*="badge"]),
+.installations-page button:not([class*="status"]):not([class*="badge"]),
+.billings-page button:not([class*="status"]):not([class*="badge"]),
+.incentive-page button:not([class*="status"]):not([class*="badge"]),
+.erp-settings button:not([class*="status"]):not([class*="badge"]) {
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+/* Buttons that were previously blue/purple are neutral charcoal */
+.site-entry [class*="primary-button"],
+.site-entry [class*="full-screen"],
+.mou-subscription [class*="primary"],
+.mou-subscription [class*="save"],
+.installations-page [class*="primary"],
+.installations-page [class*="move"],
+.billings-page [class*="primary"],
+.billings-page [class*="validate"],
+.incentive-page [class*="primary"],
+.incentive-page [class*="download"],
+.erp-settings [class*="primary"],
+.erp-settings [class*="save"] {
+  background: #374151 !important;
+  border-color: #374151 !important;
+  color: #ffffff !important;
+}
+
+/* Disabled actions: neutral grey, not blue/purple */
+.site-entry button:disabled,
+.mou-subscription button:disabled,
+.installations-page button:disabled,
+.billings-page button:disabled,
+.incentive-page button:disabled,
+.erp-settings button:disabled {
+  background: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  color: #9ca3af !important;
+  opacity: 1 !important;
+}
+
+/* ---------- Remove blue text accents ---------- */
+
+.site-entry [style*="color: rgb(59, 130, 246)"],
+.mou-subscription [style*="color: rgb(59, 130, 246)"],
+.installations-page [style*="color: rgb(59, 130, 246)"],
+.billings-page [style*="color: rgb(59, 130, 246)"],
+.incentive-page [style*="color: rgb(59, 130, 246)"],
+.erp-settings [style*="color: rgb(59, 130, 246)"] {
+  color: #4b5563 !important;
+}
+
+/* ---------- Generic neutralisation for dark inline surfaces ----------
+   Restricted to application content; Sidebar is handled separately.
+   --------------------------------------------------------------- */
+
+.site-entry [style*="background"],
+.mou-subscription [style*="background"],
+.installations-page [style*="background"],
+.billings-page [style*="background"],
+.incentive-page [style*="background"],
+.erp-settings [style*="background"] {
+  --neutral-inline-background: #ffffff;
+}
+
+/* Explicit common old theme colors that may come from JSX inline styles */
+.installations-page [style*="rgba(59, 130, 246"],
+.installations-page [style*="rgba(37, 99, 235"],
+.installations-page [style*="rgba(168, 85, 247"],
+.installations-page [style*="rgba(147, 51, 234"],
+.billings-page [style*="rgba(59, 130, 246"],
+.billings-page [style*="rgba(37, 99, 235"],
+.incentive-page [style*="rgba(59, 130, 246"],
+.incentive-page [style*="rgba(37, 99, 235"] {
+  background: #f3f4f6 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  color: #374151 !important;
+}
+
+/* ---------- Focus states: grey rather than blue ---------- */
+
+.site-entry input:focus,
+.site-entry select:focus,
+.site-entry textarea:focus,
+.mou-subscription input:focus,
+.mou-subscription select:focus,
+.mou-subscription textarea:focus,
+.installations-page input:focus,
+.installations-page select:focus,
+.installations-page textarea:focus,
+.billings-page input:focus,
+.billings-page select:focus,
+.billings-page textarea:focus,
+.incentive-page input:focus,
+.incentive-page select:focus,
+.incentive-page textarea:focus,
+.erp-settings input:focus,
+.erp-settings select:focus,
+.erp-settings textarea:focus {
+  border-color: #6b7280 !important;
+  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.12) !important;
+  outline: none !important;
+}
+
+/* ---------- Keep only meaningful status colors ----------
+   Green / amber / red remain available for operational status.
+   Blue is no longer used as the main UI background.
+   ------------------------------------------------------- */
+
+
+/* =========================================================
+   FINAL STAGE 1 SUBSCRIPTION WHITE OVERRIDE
+   Removes remaining grey / navy surfaces visible in OTF,
+   Subscription Details and Incentive Beneficiary sections.
+   ========================================================= */
+
+/* Force all nested structural DIV surfaces inside Subscription to white.
+   Inputs/buttons/status chips are styled separately below. */
+.mou-subscription div {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: #d9dee7 !important;
+  box-shadow: none !important;
+}
+
+/* Headings and normal text */
+.mou-subscription div,
+.mou-subscription label,
+.mou-subscription strong,
+.mou-subscription h1,
+.mou-subscription h2,
+.mou-subscription h3,
+.mou-subscription h4 {
+  color: #111827 !important;
+}
+
+.mou-subscription p,
+.mou-subscription small,
+.mou-subscription span:not([class*="status"]):not([class*="badge"]) {
+  color: #6b7280 !important;
+}
+
+/* Normal editable fields */
+.mou-subscription input:not(:disabled):not([readonly]),
+.mou-subscription select:not(:disabled),
+.mou-subscription textarea:not(:disabled):not([readonly]) {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Disabled / read-only fields stay visibly disabled, but no blue. */
+.mou-subscription input:disabled,
+.mou-subscription select:disabled,
+.mou-subscription textarea:disabled,
+.mou-subscription input[readonly],
+.mou-subscription textarea[readonly] {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  border-color: #d1d5db !important;
+  opacity: 1 !important;
+}
+
+/* Remove dark-blue informational/help boxes. */
+.mou-subscription [class*="info"],
+.mou-subscription [class*="hint"],
+.mou-subscription [class*="notice"],
+.mou-subscription [class*="message"],
+.mou-subscription [class*="gst"],
+.mou-subscription [class*="helper"],
+.mou-subscription [class*="note"] {
+  background: #f9fafb !important;
+  border-color: #d9dee7 !important;
+  color: #4b5563 !important;
+}
+
+/* Radio/checkbox option cards */
+.mou-subscription label:has(input[type="radio"]),
+.mou-subscription label:has(input[type="checkbox"]) {
+  background: #ffffff !important;
+  border-color: #d9dee7 !important;
+  color: #111827 !important;
+}
+
+/* Keep semantic green/amber/red badges meaningful. */
+.mou-subscription [class*="status--ready"],
+.mou-subscription [class*="status--active"],
+.mou-subscription [class*="badge--ready"],
+.mou-subscription [class*="badge--active"] {
+  color: #166534 !important;
+}
+
+.mou-subscription [class*="status--pending"],
+.mou-subscription [class*="status--warning"],
+.mou-subscription [class*="badge--pending"],
+.mou-subscription [class*="badge--warning"] {
+  color: #92400e !important;
+}
+
+.mou-subscription [class*="status--error"],
+.mou-subscription [class*="status--inactive"],
+.mou-subscription [class*="badge--error"],
+.mou-subscription [class*="badge--inactive"] {
+  color: #991b1b !important;
+}

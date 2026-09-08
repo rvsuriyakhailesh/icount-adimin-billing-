@@ -1,0 +1,547 @@
+
+.site-creation {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  background: #ffffff;
+  color: #1f2937;
+  font-family: inherit;
+}
+
+.site-creation *,
+.site-creation *::before,
+.site-creation *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- 1A TOP DETAILS BOX ---------- */
+
+/*
+  The real toolbar exists BEFORE the form in the JSX.
+  Keep it out of normal flow and place it exactly in the empty
+  3rd column of row 2 (the former Processing Status slot).
+*/
+.site-creation__toolbar {
+  position: absolute;
+  z-index: 4;
+
+  right: 18px;
+  top: 121px;
+
+  width: calc((100% - 68px) / 3);
+  height: 42px;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.site-creation__form-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: end;
+
+  padding: 18px;
+  border: 1px solid #d9dee7;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+/*
+  Processing Status stays in React state/data, but its visible field
+  is removed. With the 6th field hidden, row 2 column 3 remains empty
+  for Add Site + Upload & Verify.
+*/
+.site-creation__form-grid > .site-creation__field:nth-of-type(6) {
+  display: none;
+}
+
+/* Buttons */
+.site-creation__button,
+.site-creation__fetch-button,
+.site-creation__text-button,
+.remove-btn {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid #9ca3af;
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.site-creation__button,
+.site-creation__button--secondary {
+  background: #374151;
+  color: #ffffff;
+  border-color: #9ca3af;
+}
+
+.site-creation__button:hover,
+.site-creation__button--secondary:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.site-creation__toolbar .site-creation__button,
+.site-creation__toolbar .site-creation__button--secondary {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  height: 42px;
+  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.site-creation__button:active,
+.site-creation__fetch-button:active,
+.site-creation__text-button:active,
+.remove-btn:active {
+  transform: translateY(1px);
+}
+
+.site-creation__field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 7px;
+}
+
+.site-creation__field > span {
+  color: #374151;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.site-creation__field input,
+.site-creation__field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  padding: 9px 11px;
+  font: inherit;
+  outline: none;
+}
+
+.site-creation__field input::placeholder {
+  color: #9ca3af;
+}
+
+.site-creation__field input:focus,
+.site-creation__field select:focus,
+.site-creation__table input:focus {
+  border-color: #6b7280;
+  box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.12);
+}
+
+.site-creation__field input[readonly] {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* ---------- SITE LIST BOX ---------- */
+
+.site-creation__table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  padding: 16px 16px 12px;
+  border: 1px solid #d9dee7;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  background: #ffffff;
+  margin: 0;
+}
+
+.site-creation__table-actions,
+.site-creation__upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.site-creation__text-button,
+.site-creation__fetch-button {
+  min-height: 36px;
+  padding: 7px 12px;
+  background: #ffffff;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.site-creation__text-button:hover,
+.site-creation__fetch-button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.site-creation__upload-error {
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.site-creation__upload-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #d9dee7;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.site-creation__upload-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.site-creation__upload-title,
+.site-creation__upload-subtitle {
+  margin: 0;
+}
+
+.site-creation__upload-title {
+  font-weight: 800;
+  color: #111827;
+}
+
+.site-creation__upload-subtitle {
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.site-creation__upload-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.site-creation__upload-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #d9dee7;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.site-creation__table-wrapper,
+.site-creation__upload-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #d9dee7;
+  border-radius: 10px;
+  margin: 0;
+}
+
+.site-creation__table-toolbar + .site-creation__table-wrapper {
+  border-top: 0;
+  border-left: 1px solid #d9dee7;
+  border-right: 1px solid #d9dee7;
+  border-bottom: 1px solid #d9dee7;
+  border-radius: 0 0 16px 16px;
+  background: #ffffff;
+  margin: 0;
+}
+
+.site-creation__table-toolbar + .site-creation__table-wrapper .site-creation__table {
+  width: 100%;
+}
+
+.site-creation__table,
+.site-creation__upload-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.site-creation__table th,
+.site-creation__table td,
+.site-creation__upload-table th,
+.site-creation__upload-table td {
+  padding: 11px 8px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.site-creation__table thead th,
+.site-creation__upload-table thead th {
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.site-creation__table tbody tr:last-child td,
+.site-creation__upload-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.site-creation__table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.site-creation__col-select {
+  width: 72px;
+}
+
+.site-creation__col-screen-code,
+.site-creation__col-complex-code {
+  width: 124px;
+}
+
+.site-creation__col-site-name {
+  width: auto;
+}
+
+.site-creation__col-foc {
+  width: 82px;
+}
+
+.site-creation__col-status {
+  width: 112px;
+}
+
+.site-creation__col-action {
+  width: 104px;
+}
+
+.site-creation__table th:first-child,
+.site-creation__table td:first-child,
+.site-creation__table th:nth-child(5),
+.site-creation__table td:nth-child(5),
+.site-creation__table th:nth-child(6),
+.site-creation__table td:nth-child(6),
+.site-creation__table th:last-child,
+.site-creation__table td:last-child {
+  text-align: center;
+}
+
+.site-creation__table thead th {
+  white-space: nowrap;
+}
+
+.site-creation__table input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #111827;
+  padding: 8px 10px;
+  font: inherit;
+  outline: none;
+}
+
+.site-creation__table input[type="checkbox"],
+.row-check {
+  width: 17px;
+  height: 17px;
+  accent-color: #4b5563;
+  cursor: pointer;
+}
+
+.site-creation__table input[type="checkbox"]:disabled,
+.row-check:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.display-value {
+  color: #1f2937;
+}
+
+.site-creation__row--disabled {
+  opacity: 0.58;
+}
+
+.site-creation__row--rejoin {
+  background: rgba(62, 144, 101, 0.08);
+}
+
+.site-creation__state-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.site-creation__state-badge--state-new,
+.site-creation__state-badge--new {
+  border-color: #a7d7bd;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.site-creation__state-badge--state-renewal,
+.site-creation__state-badge--renewal {
+  border-color: #e5c878;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.site-creation__state-badge--active {
+  border-color: #d1d5db;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.remove-btn {
+  min-height: 34px;
+  padding: 6px 11px;
+  border-color: #e5e7eb;
+  background: transparent;
+  color: #6b7280;
+}
+
+.remove-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 1050px) {
+  .site-creation__form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-bottom: 76px;
+  }
+
+  .site-creation__toolbar {
+    top: auto;
+    right: 18px;
+    bottom: auto;
+    width: calc(50% - 26px);
+    transform: translateY(196px);
+  }
+}
+
+@media (max-width: 700px) {
+  .site-creation__form-grid,
+  .site-creation__upload-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .site-creation__form-grid {
+    padding-bottom: 132px;
+  }
+
+  .site-creation__toolbar {
+    position: absolute;
+    top: auto;
+    right: 18px;
+    left: 18px;
+    width: auto;
+    height: auto;
+    grid-template-columns: 1fr;
+    transform: translateY(300px);
+  }
+
+  .site-creation__table-toolbar,
+  .site-creation__upload-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .site-creation__table-actions,
+  .site-creation__upload-actions {
+    width: 100%;
+  }
+
+  .site-creation__button,
+  .site-creation__fetch-button,
+  .site-creation__text-button {
+    flex: 1 1 auto;
+  }
+}
+
+
+/* Site-list panel continuity: no left/right inset between controls and table. */
+.site-creation__table-toolbar,
+.site-creation__table-toolbar + .site-creation__table-wrapper {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.site-creation__table-toolbar + .site-creation__table-wrapper {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+
+/* Remove the flex gap between the Site List toolbar and its table.
+   The root .site-creation uses gap: 18px, so adjacent direct children
+   otherwise show a dark horizontal strip between them. */
+.site-creation__table-toolbar + .site-creation__table-wrapper {
+  margin-top: -18px;
+}
+
+
+/* FoC row control: default No, click to opt in as Yes. */
+.site-creation__foc-button {
+  min-width: 58px;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.site-creation__foc-button:hover {
+  border-color: #9ca3af;
+}
+
+.site-creation__foc-button--active {
+  background: #ecfdf5;
+  border-color: #166534;
+  color: #166534;
+}

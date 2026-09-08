@@ -1,0 +1,35 @@
+.page-placeholder {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 32px;
+  border: 1px solid #d9dee7;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1f2937;
+  text-align: center;
+}
+
+.page-placeholder__label {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-placeholder h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  text-transform: capitalize;
+}
+
+.page-placeholder p:last-child {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}

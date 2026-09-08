@@ -1,0 +1,307 @@
+.mou-status-page {
+  display: grid;
+  gap: 18px;
+  color: var(--text-primary, #f4f8ff);
+}
+
+.mou-status-page__header,
+.mou-status-page__toolbar-card,
+.mou-status-page__table-card,
+.mou-status-page__details-card {
+  border: 1px solid rgba(95, 161, 221, 0.26);
+  background: rgba(6, 27, 45, 0.72);
+  border-radius: 18px;
+}
+
+.mou-status-page__header {
+  padding: 20px 22px;
+}
+
+.mou-status-page__eyebrow,
+.mou-status-page__details-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: #79baff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mou-status-page__header h2,
+.mou-status-page__details-header h3 {
+  margin: 0;
+}
+
+.mou-status-page__header p {
+  margin: 7px 0 0;
+  color: #8db9e9;
+}
+
+.mou-status-page__toolbar-card {
+  padding: 14px 18px 18px;
+}
+
+.mou-status-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(95, 161, 221, 0.18);
+}
+
+.mou-status-page__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(89, 145, 205, 0.33);
+  border-radius: 999px;
+  background: transparent;
+  color: #b8d8fa;
+  cursor: pointer;
+}
+
+.mou-status-page__tab strong {
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(83, 143, 208, 0.15);
+  color: #9bcaff;
+  font-size: 12px;
+}
+
+.mou-status-page__tab--active {
+  border-color: rgba(93, 133, 255, 0.9);
+  background: rgba(68, 109, 220, 0.42);
+  color: #fff;
+}
+
+.mou-status-page__search {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.mou-status-page__search span {
+  color: #b9d9fa;
+  font-size: 12px;
+}
+
+.mou-status-page__search input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(84, 151, 216, 0.32);
+  border-radius: 12px;
+  background: rgba(5, 23, 39, 0.78);
+  color: #fff;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.mou-status-page__table-card {
+  overflow: hidden;
+}
+
+.mou-status-page__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mou-status-page__table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.mou-status-page__table th,
+.mou-status-page__table td {
+  padding: 15px 14px;
+  border-bottom: 1px solid rgba(95, 161, 221, 0.16);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.mou-status-page__table th {
+  color: #91bde9;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mou-status-page__table td {
+  color: #f2f7fd;
+  font-size: 13px;
+}
+
+.mou-status-page__ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mou-status-page__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(77, 139, 202, 0.18);
+  color: #b8dbff;
+}
+
+.mou-status-page__status--live {
+  background: rgba(44, 171, 116, 0.16);
+  color: #7de6b1;
+}
+
+.mou-status-page__status--about-to-expire {
+  background: rgba(217, 154, 55, 0.18);
+  color: #ffd27d;
+}
+
+.mou-status-page__status--expired {
+  background: rgba(201, 76, 76, 0.18);
+  color: #ff9a9a;
+}
+
+.mou-status-page__status--renewal-pending {
+  background: rgba(126, 87, 194, 0.2);
+  color: #ccb5ff;
+}
+
+.mou-status-page__days {
+  font-weight: 700;
+}
+
+.mou-status-page__days--attention {
+  color: #ffd27d;
+}
+
+.mou-status-page__open,
+.mou-status-page__details-primary,
+.mou-status-page__details-secondary,
+.mou-status-page__details-close {
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mou-status-page__open {
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(83, 143, 239, 0.72);
+  background: rgba(50, 100, 202, 0.18);
+  color: #bcd7ff;
+}
+
+.mou-status-page__empty {
+  padding: 34px !important;
+  text-align: center !important;
+  color: #86afd7 !important;
+}
+
+.mou-status-page__footer {
+  padding: 13px 16px;
+  color: #91bde9;
+  font-size: 12px;
+}
+
+.mou-status-page__details-card {
+  padding: 18px;
+}
+
+.mou-status-page__details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.mou-status-page__details-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(95, 161, 221, 0.26);
+  background: rgba(11, 37, 60, 0.72);
+  color: #fff;
+  font-size: 22px;
+}
+
+.mou-status-page__details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mou-status-page__details-grid > div {
+  display: grid;
+  gap: 6px;
+  min-height: 74px;
+  padding: 14px;
+  border: 1px solid rgba(95, 161, 221, 0.2);
+  border-radius: 12px;
+  background: rgba(4, 22, 38, 0.55);
+}
+
+.mou-status-page__details-grid span {
+  color: #8eb8df;
+  font-size: 11px;
+}
+
+.mou-status-page__details-grid strong {
+  overflow: hidden;
+  color: #fff;
+  text-overflow: ellipsis;
+}
+
+.mou-status-page__details-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.mou-status-page__details-primary,
+.mou-status-page__details-secondary {
+  min-height: 38px;
+  padding: 0 16px;
+}
+
+.mou-status-page__details-primary {
+  border: 1px solid #5b80ff;
+  background: linear-gradient(90deg, rgba(55, 110, 214, 0.92), rgba(87, 77, 190, 0.92));
+  color: #fff;
+}
+
+.mou-status-page__details-secondary {
+  border: 1px solid rgba(95, 161, 221, 0.32);
+  background: transparent;
+  color: #b9d8f7;
+}
+
+@media (max-width: 900px) {
+  .mou-status-page__details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .mou-status-page__details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mou-status-page__details-actions {
+    flex-direction: column-reverse;
+  }
+
+  .mou-status-page__details-primary,
+  .mou-status-page__details-secondary {
+    width: 100%;
+  }
+}
